@@ -213,5 +213,5 @@ class RichiMahjong extends BaseRule
 
     // 河底捞鱼 1
 
-    // 四面子一雀头牌型
+
 }

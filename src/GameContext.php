@@ -11,5 +11,28 @@ namespace Arathi\Mahjong;
 
 class GameContext
 {
+    /**
+     * @var array
+     */
     public $players;
+
+    /**
+     * @var int 场风
+     */
+    public $matchWind;
+
+    /**
+     * @var int 局
+     */
+    public $round;
+
+    /**
+     * @var int 连庄本场
+     */
+    public $extraRound;
+
+    /**
+     * @var int 巡
+     */
+    public $hand;
 }

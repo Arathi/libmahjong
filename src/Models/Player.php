@@ -10,9 +10,23 @@ namespace Arathi\Mahjong\Models;
 
 class Player
 {
-    public $hands;
+    /**
+     * 手牌
+     * @var array
+     */
+    public $handTiles;
 
-    public $discards;
+    /**
+     * 弃牌
+     * @var array
+     */
+    public $discardTiles;
+
+    /**
+     * 副露面子
+     * @var array
+     */
+    public $shownMelds;
 
     /**
      */
@@ -40,5 +54,26 @@ class Player
      *
      * @var int
      */
-    public $richiRound;
+    public $richiHand;
+
+    /**
+     * 听牌
+     *
+     * @var array
+     */
+    public $tenpaiList;
+
+    public function init($wind, $initScore)
+    {
+        $this->wind = $wind;
+        $this->score = $initScore;
+    }
+
+    public function restart()
+    {
+        $this->hands = [];
+        $this->discards = [];
+        $this->closedFlag = true;
+        $this->richiHand = 0;
+    }
 }

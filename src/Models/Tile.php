@@ -15,6 +15,7 @@ class Tile
     const CATEGORY_SOU    = 3;
     const CATEGORY_KAZE   = 4;
     const CATEGORY_SANGEN = 5;
+    // TODO 补充花牌
 
     const VALUE_KAZE_DON = 1;
     const VALUE_KAZE_NAN = 2;
@@ -128,5 +129,15 @@ class Tile
         }
 
         return $sn;
+    }
+
+    public function getTypeId()
+    {
+        return $this->category * 10 + $this->value;
+    }
+
+    public function getTileId()
+    {
+        return $this->getTypeId() * 10 + $this->index;
     }
 }

@@ -10,5 +10,7 @@ namespace Arathi\Mahjong\Models;
 
 class Faan
 {
+    public $name;
 
+    public $value;
 }
