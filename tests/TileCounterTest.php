@@ -14,11 +14,6 @@ use \Arathi\Mahjong\Models\TileCounter;
 
 final class TileCounterTest extends TestCase
 {
-    public function testArrayAccess()
-    {
-        //
-    }
-
     public function testParse()
     {
         // 三色同刻
@@ -29,6 +24,17 @@ final class TileCounterTest extends TestCase
         $this->assertEquals(4, $tc[41]);
         $this->assertEquals(2, $tc[53]);
         $this->assertEquals(15, $tc[0]);
+
+        try
+        {
+            $tc = TileCounter::Parse("55555m");
+            $this->assertEquals(true, false);
+        }
+        catch (\Arathi\Mahjong\MahjongException $ex)
+        {
+
+        }
+
     }
 
     public function testAdd()

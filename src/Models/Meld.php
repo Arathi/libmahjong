@@ -47,4 +47,11 @@ class Meld
      * @var bool
      */
     public $shownFlag;
+
+    public function __construct($meldType, $tileType)
+    {
+        $this->type = $meldType;
+        $this->tileCategory = intval($tileType / 10);
+        $this->startValue = intval($tileType % 10);
+    }
 }

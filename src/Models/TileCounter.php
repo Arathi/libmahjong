@@ -8,30 +8,21 @@
 
 namespace Arathi\Mahjong\Models;
 
+use Arathi\Mahjong\MahjongException;
+
 class TileCounter implements \ArrayAccess
 {
-    protected $characters;  // 万
-    protected $dots;        // 筒
-    protected $bamboo;      // 索
-    protected $winds;       // 风
-    protected $dragons;     // 箭
-
-    // protected $counter;
+    protected $counter;
 
     public function __construct()
     {
-        $this->characters = [];
-        $this->dots = [];
-        $this->bamboo = [];
-        $this->winds = [];
-        $this->dragons = [];
-
-        // $this->counter = [];
+        $this->counter = [];
     }
 
     /**
      * @param string $tileStr
      * @return TileCounter
+     * @throws MahjongException
      */
     public static function Parse($tileStr)
     {
@@ -82,12 +73,25 @@ class TileCounter implements \ArrayAccess
      */
     public function offsetExists($offset)
     {
+        if ( $this->offsetWriteable($offset) )
+        {
+            return isset($this->counter[$offset]);
+        }
+
+        return false;
+    }
+
+    protected function offsetWriteable($offset)
+    {
         $cat = intval($offset / 10);
         $value = intval($offset % 10);
 
-        if ($cat >= 1 && $cat <= 3 && $value >= 0 && $value <= 9) return true;
-        if ($cat == 4 && $value >= 1 && $value <= 4) return true;
-        if ($cat == 5 && $value >= 1 && $value <= 3) return true;
+        if ( ($cat >= 1 && $cat <= 3 && $value >= 1 && $value <= 9)
+            || ($offset >= 41 && $offset <= 44)
+            || ($offset >= 51 && $offset <= 53) )
+        {
+            return true;
+        }
 
         return false;
     }
@@ -107,73 +111,31 @@ class TileCounter implements \ArrayAccess
         $value = intval($offset % 10);
         $amount = 0;
 
+        if (isset($this[$offset]))
+        {
+            $amount = $this->counter[$offset];
+        }
+
+        if ($cat > 0 && $value == 0)
+        {
+            if ($cat >= 1 && $cat <= 3)
+            {
+                for ($v = 1; $v <= 9; $v++)
+                    $amount += $this[$cat * 10 + $v];
+            }
+            if ($cat == 4)
+            {
+                $amount = $this[41] + $this[42] + $this[43] + $this[44];
+            }
+            if ($cat == 5)
+            {
+                $amount = $this[51] + $this[52] + $this[53];
+            }
+        }
+
         if ($offset == 0)
         {
-            $amount = $this[10] + $this[20] + $this[30]
-                + $this[41] + $this[42] + $this[43] + $this[44]
-                + $this[51] + $this[52] + $this[53];
-        }
-
-        if ($cat == 1)
-        {
-            if ($value >= 1 && $value <= 9)
-            {
-                if (isset($this->characters[$value]))
-                    $amount = $this->characters[$value];
-            }
-            if ($value == 0)
-            {
-                foreach ($this->characters as $tileValue => $tileAmount)
-                {
-                    $amount += $tileAmount;
-                }
-            }
-        }
-
-        if ($cat == 2)
-        {
-            if ($value >= 1 && $value <= 9)
-            {
-                if (isset($this->dots[$value]))
-                    $amount = $this->dots[$value];
-            }
-            if ($value == 0)
-            {
-                $amount = 0;
-                foreach ($this->dots as $tileValue => $tileAmount)
-                {
-                    $amount += $tileAmount;
-                }
-            }
-        }
-
-        if ($cat == 3)
-        {
-            if ($value >= 1 && $value <= 9)
-            {
-                if (isset($this->bamboo[$value]))
-                    $amount = $this->bamboo[$value];
-            }
-            if ($value == 0)
-            {
-                $amount = 0;
-                foreach ($this->bamboo as $tileValue => $tileAmount)
-                {
-                    $amount += $tileAmount;
-                }
-            }
-        }
-
-        if ($cat == 4)
-        {
-            if ($value >= 1 && $value <= 4 && isset($this->winds[$value]))
-                return $this->winds[$value];
-        }
-
-        if ($cat == 5)
-        {
-            if ($value >= 1 && $value <= 3 && isset($this->dragons[$value]))
-                return $this->dragons[$value];
+            $amount = $this[10] + $this[20] + $this[30] + $this[40] + $this[50];
         }
 
         return $amount;
@@ -193,29 +155,9 @@ class TileCounter implements \ArrayAccess
      */
     public function offsetSet($offset, $amount)
     {
-        $cat = intval($offset / 10);
-        $value = intval($offset % 10);
-
-        if ($cat == 1 && $value >= 1 && $value <= 9)
+        if ($this->offsetWriteable($offset))
         {
-            $this->characters[$value] = $amount;
-        }
-        if ($cat == 2 && $value >= 1 && $value <= 9)
-        {
-            $this->dots[$value] = $amount;
-        }
-        if ($cat == 3 && $value >= 1 && $value <= 9)
-        {
-            $this->bamboo[$value] = $amount;
-        }
-
-        if ($cat == 4 && $value >= 1 && $value <= 4)
-        {
-            $this->winds[$value] = $amount;
-        }
-        if ($cat == 5 && $value >= 1 && $value <= 3)
-        {
-            $this->dragons[$value] = $amount;
+            $this->counter[$offset] = $amount;
         }
     }
 
@@ -230,23 +172,73 @@ class TileCounter implements \ArrayAccess
      */
     public function offsetUnset($offset)
     {
-        // TODO
-        $cat = intval($offset / 10);
-        $value = intval($offset % 10);
+        if ($this->offsetWriteable($offset))
+        {
+            unset($this->counter[$offset]);
+        }
     }
 
+    /**
+     * @param $tileTypeId
+     * @param $amount
+     * @throws MahjongException
+     */
     public function add($tileTypeId, $amount)
     {
-        if (isset($this[$tileTypeId])) $this[$tileTypeId] += $amount;
+        if (isset($this[$tileTypeId]))
+        {
+            $this[$tileTypeId] += $amount;
+            if ($this[$tileTypeId] > 4)
+                throw new MahjongException("$tileTypeId 超过4枚", 1);
+        }
         else $this[$tileTypeId] = $amount;
     }
 
+    /**
+     * @param $tileTypeId
+     * @param $amount
+     * @throws MahjongException
+     */
     public function remove($tileTypeId, $amount)
     {
         if (isset($this[$tileTypeId]))
         {
             $this[$tileTypeId] -= $amount;
-            if ($this[$tileTypeId] < 0) $this[$tileTypeId] = 0;
+            if ($this[$tileTypeId] == 0)
+                $this->offsetUnset($tileTypeId);
+            if ($this[$tileTypeId] < 0)
+                throw new MahjongException("$tileTypeId 低于0枚", 1);
         }
+    }
+
+    /**
+     * 获取超过一定数量的相同牌（对子、刻子与杠子）
+     * @return array
+     */
+    public function fetchSameTiles($limit)
+    {
+        $pairs = [];
+        foreach ($this->counter as $typeId => $amount)
+        {
+            if ($amount >= $limit) $pairs[] = $typeId;
+        }
+        return $pairs;
+    }
+
+    /**
+     * 获取顺子
+     * @return array
+     */
+    public function fetchSequences()
+    {
+        $sequences = [];
+        foreach ($this->counter as $typeId => $amount)
+        {
+            if ($typeId % 10 > 8) continue;
+            if ($typeId <= 10 || $typeId >= 40) continue;
+            if ($this[$typeId] > 0 && $this[$typeId+1] > 0 && $this[$typeId+2] > 0)
+                $sequences[] = $typeId;
+        }
+        return $sequences;
     }
 }

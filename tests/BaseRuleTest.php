@@ -11,6 +11,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 use PHPUnit\Framework\TestCase;
 use Arathi\Mahjong\Rules\RichiMahjong;
 use Arathi\Mahjong\Models\TileCounter;
+use Arathi\Mahjong\Models\Meld;
 
 final class BaseRuleTest extends TestCase
 {
@@ -33,9 +34,13 @@ final class BaseRuleTest extends TestCase
         $hu = $rule->checkNormalForm($tiles3, [], false);
         $this->assertEquals(false, $hu);
 
-        // 已有面子但不能和牌的情况
+        // 已有两个面子但不能和牌的情况
         $tiles4 = TileCounter::Parse("55m56sEEEW");
-        $melds4 = [];
-
+        $melds4 = [
+            new Meld(Meld::TYPE_KEZI, 27),
+            new Meld(Meld::TYPE_SHUNZI, 37),
+        ];
+        $hu = $rule->checkNormalForm($tiles4, $melds4, false);
+        $this->assertEquals(false, $hu);
     }
 }

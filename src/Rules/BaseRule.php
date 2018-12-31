@@ -63,7 +63,7 @@ abstract class BaseRule
         $duiziList = null;
         if ($pairExists == false)
         {
-            $duiziList = $this->fetchDuizi($handTiles);
+            $duiziList = $handTiles->fetchSameTiles(2);
             if (count($duiziList) == 0) return false;
 
             /**
@@ -72,8 +72,63 @@ abstract class BaseRule
             foreach ($duiziList as $duizi)
             {
                 $leftHandTiles = clone $handTiles;
-                $nextMelds = clone $melds;
+                $nextMelds = $melds; // TODO
                 $leftHandTiles->remove($duizi, 2);
+                $nextMelds[] = new Meld(Meld::TYPE_QUETOU, $duizi);
+                $hu = $this->checkNormalForm($leftHandTiles, $nextMelds, true);
+                if ($hu) return true;
+            }
+        }
+        else
+        {
+            if (count($melds) == 5)
+            {
+                $quetou = 0;
+                $mianzi = 0;
+
+                /**
+                 * @var Meld $meld
+                 */
+                foreach ($melds as $meld)
+                {
+                    if ($meld->type == Meld::TYPE_QUETOU) $quetou++;
+                    else $mianzi++;
+                }
+
+                if ($quetou == 1 && $mianzi == 4) return true;
+                return false;
+            }
+
+            // 检查数量，是否能被3整除，去掉雀头以后某种类型不能整除的直接pass
+            $typeIds = [10, 20, 30, 41, 42, 43, 44, 51, 52, 53];
+            foreach ($typeIds as $typeId)
+            {
+                $amount = $handTiles[$typeId];
+                if ($amount % 3 != 0) return false;
+            }
+
+            // 检查刻子
+            $keziList = $handTiles->fetchSameTiles(3);
+            foreach ($keziList as $kezi)
+            {
+                $leftHandTiles = clone $handTiles;
+                $nextMelds = $melds; // TODO
+                $leftHandTiles->remove($kezi, 3);
+                $nextMelds[] = new Meld(Meld::TYPE_KEZI, $kezi);
+                $hu = $this->checkNormalForm($leftHandTiles, $nextMelds, true);
+                if ($hu) return true;
+            }
+
+            // 检查顺子
+            $shunziList = $handTiles->fetchSequences();
+            foreach ($shunziList as $shunzi)
+            {
+                $leftHandTiles = clone $handTiles;
+                $nextMelds = $melds; // TODO
+                $leftHandTiles->remove($shunzi, 1);
+                $leftHandTiles->remove($shunzi+1, 1);
+                $leftHandTiles->remove($shunzi+2, 1);
+                $nextMelds[] = new Meld(Meld::TYPE_SHUNZI, $shunzi);
                 $hu = $this->checkNormalForm($leftHandTiles, $nextMelds, true);
                 if ($hu) return true;
             }
