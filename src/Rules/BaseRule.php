@@ -12,6 +12,7 @@ use Arathi\Mahjong\GameContext;
 use Arathi\Mahjong\Models\Meld;
 use Arathi\Mahjong\Models\Player;
 use Arathi\Mahjong\Models\Tile;
+use Arathi\Mahjong\Models\TileCounter;
 
 abstract class BaseRule
 {
@@ -49,12 +50,12 @@ abstract class BaseRule
     // 四面子一雀头牌型
 
     /**
-     * @param array <Tile> $handTiles 手牌
-     * @param array <Tile> $melts 0~4组副露
+     * @param TileCounter $handTiles 手牌
+     * @param array <Meld> $melts 0~4组副露
      * @param bool $pairExists
      * @return bool
      */
-    public function checkNormalForm($handTiles, $melts, $pairExists = false)
+    public function checkNormalForm($handTiles, $melds, $pairExists = false)
     {
         $counter = [];
 
@@ -70,9 +71,10 @@ abstract class BaseRule
              */
             foreach ($duiziList as $duizi)
             {
-                // TODO 移除掉其中一组雀头
-                $leftHandTiles = $handTiles;
-                $hu = $this->checkNormalForm($leftHandTiles, $melts, true);
+                $leftHandTiles = clone $handTiles;
+                $nextMelds = clone $melds;
+                $leftHandTiles->remove($duizi, 2);
+                $hu = $this->checkNormalForm($leftHandTiles, $nextMelds, true);
                 if ($hu) return true;
             }
         }
@@ -81,29 +83,29 @@ abstract class BaseRule
     }
 
     /**
-     * @param $tileIdList
-     * @return array <Melt>
+     * @param TileCounter $tileCounter
+     * @return array
      */
-    protected function fetchDuizi($tileIdList)
+    protected function fetchDuizi(TileCounter $tileCounter)
     {
         $duiziList = [];
 
         return $duiziList;
     }
 
-    protected function fetchShunzi($tileIdList)
+    protected function fetchShunzi(TileCounter $tileCounter)
     {
         $shunziList = [];
         return $shunziList;
     }
 
-    protected function fetchKezi($tileIdList)
+    protected function fetchKezi(TileCounter $tileCounter)
     {
         $keziList = [];
         return $keziList;
     }
 
-    protected function fetchGangzi($tileIdList)
+    protected function fetchGangzi(TileCounter $tileCounter)
     {
         $gangziList = [];
         return $gangziList;
